@@ -18,8 +18,18 @@
 					</NuxtLink>
 					<h1 class="text-xl font-bold truncate">{{ store.board.title }}</h1>
 				</div>
-				<div class="flex -space-x-2">
-					<UIAvatar v-for="member in store.board.members" :key="member.user.id" :name="member.user.full_name || member.user.email" />
+				<div class="flex items-center gap-4">
+					<span
+						class="inline-flex items-center gap-1.5 text-xs font-medium"
+						:class="connected ? 'text-emerald-600' : 'text-slate-400'"
+						:title="connected ? 'Changes from others show up instantly' : 'Reconnecting…'"
+					>
+						<span class="w-2 h-2 rounded-full" :class="connected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'" />
+						{{ connected ? 'Live' : 'Offline' }}
+					</span>
+					<div class="flex -space-x-2">
+						<UIAvatar v-for="member in store.board.members" :key="member.user.id" :name="member.user.full_name || member.user.email" />
+					</div>
 				</div>
 			</div>
 
@@ -43,7 +53,10 @@ import { VueDraggable } from 'vue-draggable-plus'
 const route = useRoute()
 const store = useBoardStore()
 
-await store.load(Number(route.params.id))
+const boardId = Number(route.params.id)
+await store.load(boardId)
+
+const { connected } = useBoardSocket(boardId)
 
 useHead({ title: () => store.board?.title || 'Board' })
 

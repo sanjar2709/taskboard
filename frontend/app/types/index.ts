@@ -56,3 +56,16 @@ export interface ApiError {
 		details: { field: string; message: string }[] | null
 	}
 }
+
+type EventOf<Name extends string, Data> = { event: Name; board_id: number; actor_id: number | null; data: Data }
+
+/** Messages from the board WebSocket, `event` tells what `data` is. */
+export type BoardEvent =
+	| EventOf<'task.created' | 'task.updated' | 'task.moved', Task>
+	| EventOf<'task.deleted', { id: number; column_id: number }>
+	| EventOf<'column.created' | 'column.updated' | 'column.moved', Column>
+	| EventOf<'column.deleted', { id: number }>
+	| EventOf<'member.added', Member>
+	| EventOf<'member.removed', { user_id: number }>
+	| EventOf<'board.updated', { id: number; title: string }>
+	| EventOf<'board.deleted', { id: number }>
