@@ -300,3 +300,9 @@ agent-android/dist/
 
 # Imzo kalitlari zaxirasi — HECH QACHON repoga tushmasin
 .release-keys/
+
+# Frontend
+node_modules/
+.nuxt/
+.output/
+.data/
