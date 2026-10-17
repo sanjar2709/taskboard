@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-import type { Board, BoardEvent, Column, Task } from '~/types'
+import type { Board, BoardEvent, Column, Member, Task } from '~/types'
 
 export const useBoardStore = defineStore('boardStore', {
 	state: () => ({
@@ -10,6 +10,7 @@ export const useBoardStore = defineStore('boardStore', {
 	}),
 
 	getters: {
+		isOwner: (state) => state.board?.owner_id === useAuthStore().user?.id,
 		findColumn: (state) => (id: number) => state.board?.columns.find((c) => c.id === id),
 		findTask: (state) => (id: number) => state.board?.columns.flatMap((c) => c.tasks).find((t) => t.id === id)
 	},
@@ -50,6 +51,41 @@ export const useBoardStore = defineStore('boardStore', {
 			} catch {
 				await this.resync()
 			}
+		},
+
+		async updateTask(taskId: number, changes: Partial<Pick<Task, 'title' | 'description' | 'due_date'>> & { assignee_id?: number | null }) {
+			const { $patch } = useApi()
+			this.upsertTask(await $patch<Task>(`tasks/${taskId}`, { body: changes }))
+		},
+
+		async deleteTask(taskId: number) {
+			const { $delete } = useApi()
+			await $delete(`tasks/${taskId}`)
+			this.removeTask(taskId)
+		},
+
+		async renameBoard(title: string) {
+			const { $patch } = useApi()
+			const board = await $patch<Board>(`boards/${this.board!.id}`, { body: { title } })
+			this.board!.title = board.title
+		},
+
+		async deleteBoard() {
+			const { $delete } = useApi()
+			await $delete(`boards/${this.board!.id}`)
+			this.board = null
+		},
+
+		async addMember(email: string) {
+			const { $post } = useApi()
+			const member = await $post<Member>(`boards/${this.board!.id}/members`, { body: { email } })
+			if (!this.board!.members.some((m) => m.user.id === member.user.id)) this.board!.members.push(member)
+		},
+
+		async removeMember(userId: number) {
+			const { $delete } = useApi()
+			await $delete(`boards/${this.board!.id}/members/${userId}`)
+			this.board!.members = this.board!.members.filter((m) => m.user.id !== userId)
 		},
 
 		async addColumn(title: string) {
