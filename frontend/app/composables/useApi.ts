@@ -2,20 +2,36 @@ import type { FetchOptions } from 'ofetch'
 
 export const useApi = () => {
 	const config = useRuntimeConfig()
+	const auth = useAuthStore()
 	const loading = ref(false)
 
 	function $service(options?: FetchOptions) {
 		return $fetch.create({
 			...options,
-			baseURL: config.public.apiBaseUrl
+			baseURL: config.public.apiBaseUrl,
+			headers: {
+				...options?.headers,
+				...(auth.access ? { Authorization: `Bearer ${auth.access}` } : {})
+			}
 		})
 	}
 
-	function request<T>(endpoint: string, options?: FetchOptions): Promise<T> {
+	async function request<T>(endpoint: string, options?: FetchOptions): Promise<T> {
 		loading.value = true
-		return $service(options)<T>(endpoint).finally(() => {
+		try {
+			return (await $service(options)<T>(endpoint)) as T
+		} catch (error) {
+			// Access token lives 30 minutes: on 401 get a new pair once and repeat the request
+			if ((error as { status?: number }).status === 401 && auth.refresh && !endpoint.startsWith('auth/')) {
+				if (await auth.refreshTokens()) {
+					return (await $service(options)<T>(endpoint)) as T
+				}
+				auth.logout()
+			}
+			throw error
+		} finally {
 			loading.value = false
-		}) as Promise<T>
+		}
 	}
 
 	const $get = <T = never>(endpoint: string, options?: FetchOptions) => request<T>(endpoint, { ...options, method: 'GET' })

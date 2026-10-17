@@ -33,6 +33,10 @@ export default defineNuxtConfig({
 	},
 	icon: {
 		size: '20px',
+		// SPA: put the icons we use straight into the client bundle instead of fetching them at runtime
+		clientBundle: {
+			scan: true
+		},
 		serverBundle: {
 			collections: ['lucide']
 		}
