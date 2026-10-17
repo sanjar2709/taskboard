@@ -35,3 +35,6 @@ DB_PORT = os.getenv('DB_PORT', '5432')
 
 DATABASE_URL = f'postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
 DB_ECHO = os.getenv('DB_ECHO') == '1'
+
+# Redis is used to deliver board events between app processes. Empty means one process only.
+REDIS_URL = os.getenv('REDIS_URL', '')

@@ -1,15 +1,28 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from apps.boards.router import router as boards_router
+from apps.boards.websocket import router as boards_ws_router
 from apps.tasks.router import router as tasks_router
 from apps.users.router import router as auth_router
 from core import settings
 from core.db import DBSession
 from core.exceptions import register_exception_handlers
+from core.realtime import broadcaster
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await broadcaster.start()
+    yield
+    await broadcaster.stop()
+
 
 app = FastAPI(
+    lifespan=lifespan,
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     docs_url='/api/docs',
@@ -36,3 +49,4 @@ async def health(db: DBSession):
 app.include_router(auth_router, prefix='/api/v1')
 app.include_router(boards_router, prefix='/api/v1')
 app.include_router(tasks_router, prefix='/api/v1')
+app.include_router(boards_ws_router, prefix='/api/v1')
