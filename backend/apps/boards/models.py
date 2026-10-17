@@ -61,6 +61,11 @@ class Column(TimeStampedMixin, Base):
     position: Mapped[float] = mapped_column(Float)
 
     board: Mapped[Board] = relationship(back_populates='columns')
+    tasks: Mapped[list['Task']] = relationship(  # noqa: F821  (apps.tasks.models)
+        order_by='Task.position',
+        cascade='all, delete-orphan',
+        lazy='selectin',
+    )
 
     def __repr__(self):
         return f'<Column {self.title}>'

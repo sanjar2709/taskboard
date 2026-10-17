@@ -66,3 +66,18 @@ class BoardListItem(BaseModel):
 class BoardRead(BoardListItem):
     members: list[MemberRead]
     columns: list[ColumnRead]
+
+
+class ColumnWithTasks(ColumnRead):
+    tasks: list['TaskRead']
+
+
+class BoardDetail(BoardListItem):
+    members: list[MemberRead]
+    columns: list[ColumnWithTasks]
+
+
+from apps.tasks.schemas import TaskRead  # noqa: E402  (circular: tasks schemas use MemberUser)
+
+ColumnWithTasks.model_rebuild()
+BoardDetail.model_rebuild()

@@ -7,6 +7,7 @@ from . import services
 from .dependencies import BoardColumn, MemberBoard, OwnBoard
 from .schemas import (
     BoardCreate,
+    BoardDetail,
     BoardListItem,
     BoardRead,
     BoardUpdate,
@@ -37,7 +38,7 @@ async def create_board(data: BoardCreate, db: DBSession, user: CurrentUser):
     return await services.create_board(db, user, data.title)
 
 
-@router.get('/boards/{board_id}', response_model=BoardRead)
+@router.get('/boards/{board_id}', response_model=BoardDetail)
 async def get_board(board: MemberBoard):
     return board
 
